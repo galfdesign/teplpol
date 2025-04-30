@@ -6,6 +6,7 @@
     <title>Калькулятор теплого пола</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --primary-color: #3498db;
@@ -20,7 +21,7 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             line-height: 1.6;
             background-color: #f5f7fa;
             color: #333;
@@ -29,7 +30,7 @@
         .container {
             max-width: 100%;
             margin: 0 auto;
-            padding: 15px;
+            padding: 20px;
             background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.08);
             border-radius: 10px;
@@ -40,7 +41,7 @@
             font-size: 1.8rem;
             font-weight: 700;
             color: var(--dark-color);
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             padding-bottom: 10px;
             border-bottom: 2px solid var(--light-color);
         }
@@ -66,7 +67,7 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         
         .control-group label {
@@ -88,7 +89,7 @@
         }
         
         button {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: var(--primary-color);
             color: white;
             border: none;
@@ -112,7 +113,7 @@
         
         .btn-group {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
         }
@@ -132,36 +133,49 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0;
+            margin: 15px 0;
             font-size: 0.9rem;
         }
         
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: center;
         }
         
         th {
             background-color: var(--primary-color);
             color: white;
-            font-size: 0.8rem;
+            font-weight: 600;
         }
         
         .loop-name-input {
             width: 120px;
-            text-align: left;
-            padding-left: 8px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
         
         .export-btn {
             background: var(--success-color);
-            margin-top: 10px;
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            margin: 30px auto 10px;
+            display: block;
+            width: fit-content;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16);
+        }
+        
+        .export-btn:hover {
+            background: #219955;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
         }
         
         .small-btn {
-            padding: 4px 6px;
-            font-size: 0.8rem;
+            padding: 6px 10px;
+            font-size: 0.85rem;
         }
         
         .warning {
@@ -187,17 +201,17 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 15px;
-            margin: 15px 0;
+            margin: 20px 0;
         }
         
         .loop-card {
             border: 1px solid #ddd;
             padding: 15px;
-            border-radius: 5px;
+            border-radius: 8px;
             background-color: #f9f9f9;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px;
             align-items: center;
         }
         
@@ -206,12 +220,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         
         .loop-title {
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
         
         .control-group {
@@ -221,28 +235,31 @@
         }
         
         .control-label {
-            margin-bottom: 5px;
-            font-size: 0.9rem;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
         }
         
         .length-controls {
             display: flex;
             align-items: center;
+            gap: 5px;
         }
         
         .diameter-switch {
             display: flex;
             justify-content: center;
-            gap: 5px;
+            gap: 8px;
         }
         
         .diameter-btn {
-            padding: 4px 8px;
+            padding: 6px 12px;
             background: var(--light-color);
             border: 1px solid #bdc3c7;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
         
         .diameter-btn.active {
@@ -252,25 +269,27 @@
         }
         
         .chart-container {
-            margin-top: 20px;
+            margin-top: 30px;
             position: relative;
-            height: 300px;
+            height: 350px;
             width: 100%;
         }
         
         .summary {
             background-color: #eaf2f8;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-size: 0.9rem;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 0.95rem;
         }
         
         .export-container {
             text-align: center;
-            margin-top: 20px;
+            margin: 40px 0 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
         }
-        
+
         @media (max-width: 768px) {
             .control-group label {
                 min-width: 100%;
@@ -288,7 +307,7 @@
             
             .loop-card {
                 grid-template-columns: 1fr;
-                padding: 12px;
+                padding: 15px;
             }
             
             .loop-header {
@@ -298,7 +317,7 @@
             
             .loop-name-input {
                 width: 100%;
-                margin-bottom: 8px;
+                margin-bottom: 10px;
             }
             
             .length-controls {
@@ -311,13 +330,17 @@
             }
             
             th, td {
-                padding: 6px 4px;
+                padding: 8px 6px;
+            }
+            
+            .chart-container {
+                height: 300px;
             }
         }
 
         @media (max-width: 480px) {
             .container {
-                padding: 10px;
+                padding: 15px;
             }
             
             .brand {
@@ -335,6 +358,11 @@
             input[type="number"] {
                 width: 70px;
                 padding: 6px 8px;
+            }
+            
+            .export-btn {
+                width: 100%;
+                max-width: 300px;
             }
         }
     </style>
@@ -408,6 +436,7 @@
     </div>
 
     <script>
+        // Используем jsPDF через window.jspdf
         const { jsPDF } = window.jspdf;
         let flowMeterChart = null;
         let loopData = [];
@@ -697,68 +726,124 @@
         }
 
         function exportToPDF() {
-            const doc = new jsPDF('p', 'mm', 'a4');
-            
-            doc.setFontSize(20);
-            doc.text('Galf Design - Расчет теплого пола', 105, 15, { align: 'center' });
-            
-            const now = new Date();
-            doc.setFontSize(10);
-            doc.text(`Отчет создан: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 105, 22, { align: 'center' });
-            
-            doc.setFontSize(12);
-            doc.text(`Δt: ${document.getElementById("deltaT").value} °C`, 14, 30);
-            
-            doc.setFontSize(12);
-            doc.text('Результаты расчета:', 14, 40);
-            
-            const headers = [
-                "Контур",
-                "Название",
-                "Длина",
-                "Диаметр",
-                "Мощность",
-                "Расход",
-                "Скорость",
-                "Сопр.",
-                "Расходомер",
-                "Статус"
-            ];
-            
-            const data = loopData.map(item => [
-                item.loop,
-                item.name,
-                item.length,
-                item.diameter,
-                item.power.toFixed(0),
-                item.flowRate.toFixed(2),
-                item.velocity.toFixed(3),
-                item.resistance.toFixed(2),
-                item.flowMeterSetting + '%',
-                item.status.replace(/[❌⚠️↓✅]/g, '')
-            ]);
-            
-            doc.autoTable({
-                startY: 45,
-                head: [headers],
-                body: data,
-                margin: { left: 10 },
-                styles: { fontSize: 8 },
-                headStyles: { fillColor: [52, 152, 219] }
-            });
-            
-            const summaryY = doc.lastAutoTable.finalY + 10;
-            doc.setFontSize(12);
-            doc.text('Сводка по системе:', 14, summaryY);
-            
-            doc.setFontSize(10);
-            doc.text(`Общий расход: ${document.getElementById("totalFlow").textContent} л/мин (${document.getElementById("totalFlowLh").textContent} л/ч)`, 14, summaryY + 7);
-            doc.text(`Максимальная скорость: ${document.getElementById("maxVelocity").textContent} м/с`, 14, summaryY + 14);
-            doc.text(`Максимальное сопротивление: ${document.getElementById("maxResistance").textContent} кПа (${document.getElementById("maxResistanceMeters").textContent} м.вод.ст.)`, 14, summaryY + 21);
-            doc.text(`Рабочая точка насоса: ${document.getElementById("pumpOperatingPoint").textContent}`, 14, summaryY + 28);
-            doc.text(`Состояние системы: ${document.getElementById("systemStatus").textContent.replace(/[❌⚠️↓✅]/g, '')}`, 14, summaryY + 35);
-            
-            doc.save(`Расчет_теплого_пола_${now.toISOString().slice(0,10)}.pdf`);
+            try {
+                // Создаем новый PDF документ
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Устанавливаем шрифт с поддержкой кириллицы
+                doc.setFont('helvetica');
+                
+                // Заголовок
+                doc.setFontSize(20);
+                doc.setTextColor(30, 128, 210);
+                doc.text('Galf Design - Расчет теплого пола', 105, 20, { align: 'center' });
+                
+                // Дата и время
+                const now = new Date();
+                doc.setFontSize(10);
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Отчет создан: ${now.toLocaleDateString('ru-RU')} ${now.toLocaleTimeString('ru-RU')}`, 105, 27, { align: 'center' });
+                
+                // Параметры расчета
+                doc.setFontSize(12);
+                doc.setTextColor(40, 40, 40);
+                doc.text(`Δt: ${document.getElementById("deltaT").value} °C`, 20, 40);
+                
+                // Подготовка данных для таблицы
+                const headers = [
+                    ["Контур", "Название", "Длина (м)", "Диаметр (мм)", "Мощность (Вт)", "Расход (л/мин)", "Скорость (м/с)", "Сопр. (кПа)", "Расходомер (%)", "Статус"]
+                ];
+                
+                const data = loopData.map(item => [
+                    item.loop,
+                    item.name,
+                    item.length,
+                    item.diameter,
+                    item.power.toFixed(0),
+                    item.flowRate.toFixed(2),
+                    item.velocity.toFixed(3),
+                    item.resistance.toFixed(2),
+                    item.flowMeterSetting,
+                    item.status.replace(/[❌⚠️↓✅]/g, '')
+                ]);
+
+                // Добавляем таблицу
+                doc.autoTable({
+                    startY: 50,
+                    head: headers,
+                    body: data,
+                    margin: { left: 10, right: 10 },
+                    styles: { 
+                        fontSize: 8,
+                        cellPadding: 3,
+                        overflow: 'linebreak',
+                        textColor: [40, 40, 40],
+                        font: 'helvetica'
+                    },
+                    headStyles: { 
+                        fillColor: [30, 128, 210],
+                        textColor: [255, 255, 255],
+                        fontStyle: 'bold',
+                        font: 'helvetica'
+                    },
+                    alternateRowStyles: {
+                        fillColor: [240, 240, 240],
+                        font: 'helvetica'
+                    },
+                    didDrawPage: function(data) {
+                        // Номер страницы
+                        doc.setFontSize(10);
+                        doc.setTextColor(150, 150, 150);
+                        doc.text(
+                            'Страница ' + doc.internal.getNumberOfPages(),
+                            data.settings.margin.left,
+                            doc.internal.pageSize.height - 10
+                        );
+                    }
+                });
+
+                // Добавляем сводку
+                let summaryY = doc.lastAutoTable.finalY + 15;
+                if (summaryY > 250) {
+                    doc.addPage();
+                    summaryY = 20;
+                }
+                
+                doc.setFontSize(12);
+                doc.setTextColor(30, 128, 210);
+                doc.text('Сводка по системе', 105, summaryY, { align: 'center' });
+                
+                doc.setFontSize(10);
+                doc.setTextColor(40, 40, 40);
+                
+                // Текст сводки
+                doc.text(`• Общий расход: ${document.getElementById("totalFlow").textContent} л/мин (${document.getElementById("totalFlowLh").textContent} л/ч)`, 20, summaryY + 10);
+                doc.text(`• Максимальная скорость: ${document.getElementById("maxVelocity").textContent} м/с`, 20, summaryY + 16);
+                doc.text(`• Максимальное сопротивление: ${document.getElementById("maxResistance").textContent} кПа (${document.getElementById("maxResistanceMeters").textContent} м.вод.ст.)`, 20, summaryY + 22);
+                doc.text(`• Рабочая точка насоса: ${document.getElementById("pumpOperatingPoint").textContent}`, 20, summaryY + 28);
+                
+                // Статус системы с цветом
+                const status = document.getElementById("systemStatus").textContent;
+                if (status.includes('❌')) {
+                    doc.setTextColor(231, 76, 60);
+                } else if (status.includes('⚠️')) {
+                    doc.setTextColor(243, 156, 18);
+                } else {
+                    doc.setTextColor(39, 174, 96);
+                }
+                doc.text(`• Состояние системы: ${status.replace(/[❌⚠️↓✅]/g, '')}`, 20, summaryY + 34);
+                
+                // Сохраняем PDF
+                doc.save(`Расчет_теплого_пола_${now.toISOString().slice(0,10)}.pdf`);
+                
+            } catch (error) {
+                console.error("Ошибка при создании PDF:", error);
+                alert("Произошла ошибка при создании PDF. Пожалуйста, попробуйте снова.");
+            }
         }
 
         function resetCalculator() {
@@ -774,6 +859,7 @@
             if (flowMeterChart) flowMeterChart.destroy();
         }
 
+        // Инициализация при загрузке страницы
         window.onload = function() {
             generateInputs();
         };
