@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор теплого пола</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            line-height: 1.5;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+            background: white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        .brand {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+            text-align: center;
+            margin: 10px 0;
+            font-size: 1.5rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+            font-size: 0.8rem;
+        }
+        input {
+            width: 60px;
+            padding: 6px;
+            margin: 3px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .loop-name-input {
+            width: 120px;
+            text-align: left;
+            padding-left: 8px;
+        }
+        button {
+            padding: 6px 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 2px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .export-btn {
+            background: #27ae60;
+            margin-top: 10px;
+        }
+        .export-btn:hover {
+            background: #219955;
+        }
+        .small-btn {
+            padding: 4px 6px;
+            font-size: 0.8rem;
+        }
+        .warning {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .ok {
+            color: #27ae60;
+        }
+        .high-resistance {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        .low-resistance {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .loop-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .loop-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+        .loop-header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .loop-title {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .control-label {
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .length-controls {
+            display: flex;
+            align-items: center;
+        }
+        .diameter-switch {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+        .diameter-btn {
+            padding: 4px 8px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .diameter-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #2980b9;
+        }
+        .chart-container {
+            margin-top: 20px;
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        .summary {
+            background-color: #eaf2f8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        .export-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        @media (max-width: 600px) {
+            .loop-card {
+                grid-template-columns: 1fr;
+            }
+            .control-group {
+                margin-bottom: 10px;
+            }
+            .loop-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .loop-name-input {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="brand">Galf Design</div>
+        <h1>Калькулятор теплого пола</h1>
+        
+        <div class="controls">
+            <div style="text-align: center;">
+                <label>Количество контуров: </label>
+                <input type="number" id="loopCount" min="1" max="20" value="3">
+                <button onclick="generateInputs()">Создать</button>
+            </div>
+
+            <div style="text-align: center; margin-top: 10px;">
+                <label>Δt (°C): </label>
+                <input type="number" id="deltaT" min="1" max="15" value="5">
+                <button onclick="calculate()">Рассчитать</button>
+                <button onclick="resetCalculator()" style="background: #95a5a6;">Сбросить</button>
+            </div>
+        </div>
+
+        <div id="inputs" class="loop-inputs"></div>
+
+        <div class="results">
+            <h2>Результаты</h2>
+            <div style="overflow-x: auto;">
+                <table id="results">
+                    <thead>
+                        <tr>
+                            <th>Контур</th>
+                            <th>Название</th>
+                            <th>Длина</th>
+                            <th>Диаметр</th>
+                            <th>Мощность</th>
+                            <th>Расход</th>
+                            <th>Скорость</th>
+                            <th>Сопр.</th>
+                            <th>Расходомер</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="summary">
+                <h3>Сводка по системе</h3>
+                <p><strong>Общий расход:</strong> <span id="totalFlow">0</span> л/мин (<span id="totalFlowLh">0</span> л/ч)</p>
+                <p><strong>Макс. скорость:</strong> <span id="maxVelocity">0</span> м/с</p>
+                <p><strong>Макс. сопротивление:</strong> <span id="maxResistance">0</span> кПа (<span id="maxResistanceMeters">0</span> м.вод.ст.)</p>
+                <p><strong>Рабочая точка насоса:</strong> <span id="pumpOperatingPoint">-</span></p>
+                <p><strong>Состояние:</strong> <span id="systemStatus">-</span></p>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <h2>Настройка расходомеров (0-5 л/мин)</h2>
+            <canvas id="flowMeterChart"></canvas>
+        </div>
+
+        <div class="export-container">
+            <button class="export-btn" onclick="exportToPDF()">Экспорт в PDF</button>
+        </div>
+    </div>
+
+    <script>
+        // Используем jsPDF через window.jspdf
+        const { jsPDF } = window.jspdf;
+        let flowMeterChart = null;
+        let loopData = [];
+
+        function generateInputs() {
+            const loopCount = parseInt(document.getElementById("loopCount").value);
+            const inputsDiv = document.getElementById("inputs");
+            inputsDiv.innerHTML = "";
+
+            for (let i = 1; i <= loopCount; i++) {
+                inputsDiv.innerHTML += `
+                    <div class="loop-card">
+                        <div class="loop-header">
+                            <div class="loop-title">Контур ${i}</div>
+                            <input type="text" class="loop-name-input" id="loopName${i}" value="Контур ${i}" placeholder="Название контура">
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Длина трубы (м)</div>
+                            <div class="length-controls">
+                                <button class="small-btn" onclick="changeLength(${i}, -5)">-5</button>
+                                <input type="number" id="length${i}" min="10" max="200" value="70">
+                                <button class="small-btn" onclick="changeLength(${i}, 5)">+5</button>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <div class="control-label">Диаметр трубы (мм)</div>
+                            <div class="diameter-switch">
+                                <button class="diameter-btn active" onclick="setDiameter(${i}, 12)">12</button>
+                                <button class="diameter-btn" onclick="setDiameter(${i}, 16)">16</button>
+                                <button class="diameter-btn" onclick="setDiameter(${i}, 20)">20</button>
+                            </div>
+                            <input type="hidden" id="diameter${i}" value="12">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function setDiameter(loopId, diameter) {
+            document.getElementById(`diameter${loopId}`).value = diameter;
+            
+            // Update active state for buttons
+            const buttons = document.querySelectorAll(`#inputs .loop-card:nth-child(${loopId}) .diameter-btn`);
+            buttons.forEach(btn => {
+                if (parseInt(btn.textContent) === diameter) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        function changeLength(loopId, change) {
+            const input = document.getElementById(`length${loopId}`);
+            let value = parseInt(input.value) + change;
+            if (value < 10) value = 10;
+            if (value > 200) value = 200;
+            input.value = value;
+        }
+
+        function calculateFlowRate(power, deltaT) {
+            // Q = (P × 0.86) / ΔT [л/час]
+            const flowRateLh = (power * 0.86) / deltaT;
+            return flowRateLh / 60; // Переводим в л/мин
+        }
+
+        function calculateHydraulicResistance(length, diameter, flowRate) {
+            const density = 997; // Плотность воды при 40°C (кг/м³)
+            const viscosity = 0.658e-6; // Кинематическая вязкость при 40°C (м²/с)
+            
+            const flowRateM3 = flowRate / 1000 / 60; // м³/с
+            const area = Math.PI * Math.pow(diameter / 1000 / 2, 2); // м²
+            const velocity = flowRateM3 / area; // м/с
+            
+            const Re = (velocity * (diameter/1000)) / viscosity;
+            
+            let lambda;
+            if (Re < 2300) {
+                lambda = 64 / Re; // Ламинарный режим
+            } else {
+                lambda = 0.3164 / Math.pow(Re, 0.25); // Турбулентный режим (Шифринсон)
+            }
+            
+            const deltaP = lambda * (length / (diameter/1000)) * (density * Math.pow(velocity, 2)) / 2;
+            return deltaP / 1000; // кПа
+        }
+
+        function calculate() {
+            const deltaT = parseFloat(document.getElementById("deltaT").value);
+            const resultsBody = document.getElementById("resultsBody");
+            resultsBody.innerHTML = "";
+
+            loopData = [];
+            let totalFlow = 0;
+            let maxVelocity = 0;
+            let maxResistance = 0;
+
+            const loopCount = parseInt(document.getElementById("loopCount").value);
+
+            for (let i = 1; i <= loopCount; i++) {
+                const length = parseFloat(document.getElementById(`length${i}`).value);
+                const diameter = parseFloat(document.getElementById(`diameter${i}`).value);
+                const loopName = document.getElementById(`loopName${i}`).value || `Контур ${i}`;
+
+                // Расчет по 60 Вт/8м (но не отображаем это в интерфейсе)
+                const power = (length / 8) * 60;
+                const flowRate = calculateFlowRate(power, deltaT);
+                const pipeArea = Math.PI * Math.pow(diameter / 1000 / 2, 2);
+                const velocity = (flowRate / 1000 / 60) / pipeArea;
+                const resistance = calculateHydraulicResistance(length, diameter, flowRate);
+                const flowMeterSetting = Math.min(Math.round((flowRate / 2.5) * 100), 100);
+
+                let status, statusClass;
+                if (resistance > 23) {
+                    status = "❌ Высокое сопротивление";
+                    statusClass = "warning";
+                } else if (velocity > 1.0) {
+                    status = "❌ Опасная скорость";
+                    statusClass = "warning";
+                } else if (velocity > 0.7) {
+                    status = "⚠️ Высокая скорость";
+                    statusClass = "high-resistance";
+                } else if (resistance > 15) {
+                    status = "⚠️ Повышенное сопротивление";
+                    statusClass = "high-resistance";
+                } else if (resistance < 0.2) {
+                    status = "↓ Низкое сопротивление";
+                    statusClass = "low-resistance";
+                } else {
+                    status = "✅ Норма";
+                    statusClass = "ok";
+                }
+
+                loopData.push({
+                    loop: i,
+                    name: loopName,
+                    length,
+                    diameter,
+                    power,
+                    flowRate,
+                    velocity,
+                    resistance,
+                    flowMeterSetting,
+                    status
+                });
+
+                resultsBody.innerHTML += `
+                    <tr>
+                        <td>${i}</td>
+                        <td>${loopName}</td>
+                        <td>${length}</td>
+                        <td>${diameter}</td>
+                        <td>${power.toFixed(0)}</td>
+                        <td>${flowRate.toFixed(2)}</td>
+                        <td>${velocity.toFixed(3)}</td>
+                        <td>${resistance.toFixed(2)}</td>
+                        <td>${flowMeterSetting}%</td>
+                        <td class="${statusClass}">${status}</td>
+                    </tr>
+                `;
+
+                totalFlow += flowRate;
+                if (velocity > maxVelocity) maxVelocity = velocity;
+                if (resistance > maxResistance) maxResistance = resistance;
+            }
+
+            // Обновление сводки
+            document.getElementById("totalFlow").textContent = totalFlow.toFixed(2);
+            document.getElementById("totalFlowLh").textContent = (totalFlow * 60).toFixed(0);
+            document.getElementById("maxVelocity").textContent = maxVelocity.toFixed(3);
+            document.getElementById("maxResistance").textContent = maxResistance.toFixed(2);
+            document.getElementById("maxResistanceMeters").textContent = (maxResistance / 9.81).toFixed(2);
+            document.getElementById("pumpOperatingPoint").textContent = `${totalFlow.toFixed(2)} л/мин @ ${(maxResistance / 9.81).toFixed(2)} м`;
+            
+            let systemStatus = "✅ Норма";
+            if (maxResistance > 23) {
+                systemStatus = "❌ Опасное сопротивление!";
+            } else if (maxVelocity > 1.0) {
+                systemStatus = "❌ Опасная скорость!";
+            } else if (maxResistance > 15 || maxVelocity > 0.7) {
+                systemStatus = "⚠️ Есть критические параметры";
+            } else if (loopData.some(item => item.resistance < 0.2)) {
+                systemStatus = "↓ Низкое сопротивление в некоторых контурах";
+            }
+            document.getElementById("systemStatus").textContent = systemStatus;
+
+            renderFlowMeterChart();
+        }
+
+        function renderFlowMeterChart() {
+            const ctx = document.getElementById("flowMeterChart").getContext("2d");
+
+            if (flowMeterChart) {
+                flowMeterChart.destroy();
+            }
+
+            const labels = loopData.map(item => item.name || `К${item.loop}`);
+            const flowMeterSettings = loopData.map(item => item.flowMeterSetting);
+            const flowRates = loopData.map(item => item.flowRate);
+
+            flowMeterChart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Настройка расходомера (%)",
+                        data: flowMeterSettings,
+                        backgroundColor: "rgba(52, 152, 219, 0.7)",
+                        borderColor: "rgba(41, 128, 185, 1)",
+                        borderWidth: 1,
+                        yAxisID: 'y-percent'
+                    },
+                    {
+                        label: "Расход (л/мин)",
+                        data: flowRates,
+                        backgroundColor: "rgba(46, 204, 113, 0.7)",
+                        borderColor: "rgba(39, 174, 96, 1)",
+                        borderWidth: 1,
+                        type: 'line',
+                        yAxisID: 'y-flow'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        'y-percent': {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Настройка (%)',
+                                color: 'rgba(41, 128, 185, 1)'
+                            },
+                            min: 0,
+                            max: 100,
+                            ticks: {
+                                stepSize: 10
+                            },
+                            grid: {
+                                drawOnChartArea: true
+                            }
+                        },
+                        'y-flow': {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Расход (л/мин)',
+                                color: 'rgba(39, 174, 96, 1)'
+                            },
+                            min: 0,
+                            max: 5,
+                            ticks: {
+                                stepSize: 0.5
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 10
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.datasetIndex === 0) {
+                                        label += context.raw + '%';
+                                    } else {
+                                        label += context.raw.toFixed(2) + ' л/мин';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function exportToPDF() {
+            // Создаем новый PDF документ
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Добавляем заголовок
+            doc.setFontSize(20);
+            doc.text('Galf Design - Расчет теплого пола', 105, 15, { align: 'center' });
+            
+            // Добавляем дату
+            const now = new Date();
+            doc.setFontSize(10);
+            doc.text(`Отчет создан: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 105, 22, { align: 'center' });
+            
+            // Добавляем параметры расчета
+            doc.setFontSize(12);
+            doc.text(`Δt: ${document.getElementById("deltaT").value} °C`, 14, 30);
+            
+            // Добавляем таблицу с результатами
+            doc.setFontSize(12);
+            doc.text('Результаты расчета:', 14, 40);
+            
+            // Подготавливаем данные для таблицы
+            const headers = [
+                "Контур",
+                "Название",
+                "Длина",
+                "Диаметр",
+                "Мощность",
+                "Расход",
+                "Скорость",
+                "Сопр.",
+                "Расходомер",
+                "Статус"
+            ];
+            
+            const data = loopData.map(item => [
+                item.loop,
+                item.name,
+                item.length,
+                item.diameter,
+                item.power.toFixed(0),
+                item.flowRate.toFixed(2),
+                item.velocity.toFixed(3),
+                item.resistance.toFixed(2),
+                item.flowMeterSetting + '%',
+                item.status.replace(/[❌⚠️↓✅]/g, '') // Удаляем emoji для PDF
+            ]);
+            
+            // Генерируем таблицу
+            doc.autoTable({
+                startY: 45,
+                head: [headers],
+                body: data,
+                margin: { left: 10 },
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [52, 152, 219] }
+            });
+            
+            // Добавляем сводку
+            const summaryY = doc.lastAutoTable.finalY + 10;
+            doc.setFontSize(12);
+            doc.text('Сводка по системе:', 14, summaryY);
+            
+            doc.setFontSize(10);
+            doc.text(`Общий расход: ${document.getElementById("totalFlow").textContent} л/мин (${document.getElementById("totalFlowLh").textContent} л/ч)`, 14, summaryY + 7);
+            doc.text(`Максимальная скорость: ${document.getElementById("maxVelocity").textContent} м/с`, 14, summaryY + 14);
+            doc.text(`Максимальное сопротивление: ${document.getElementById("maxResistance").textContent} кПа (${document.getElementById("maxResistanceMeters").textContent} м.вод.ст.)`, 14, summaryY + 21);
+            doc.text(`Рабочая точка насоса: ${document.getElementById("pumpOperatingPoint").textContent}`, 14, summaryY + 28);
+            doc.text(`Состояние системы: ${document.getElementById("systemStatus").textContent.replace(/[❌⚠️↓✅]/g, '')}`, 14, summaryY + 35);
+            
+            // Сохраняем PDF
+            doc.save(`Расчет_теплого_пола_${now.toISOString().slice(0,10)}.pdf`);
+        }
+
+        function resetCalculator() {
+            document.getElementById("inputs").innerHTML = "";
+            document.getElementById("resultsBody").innerHTML = "";
+            document.getElementById("totalFlow").textContent = "0";
+            document.getElementById("totalFlowLh").textContent = "0";
+            document.getElementById("maxVelocity").textContent = "0";
+            document.getElementById("maxResistance").textContent = "0";
+            document.getElementById("maxResistanceMeters").textContent = "0";
+            document.getElementById("pumpOperatingPoint").textContent = "-";
+            document.getElementById("systemStatus").textContent = "-";
+            if (flowMeterChart) flowMeterChart.destroy();
+        }
+
+        window.onload = function() {
+            generateInputs();
+        };
+    </script>
+</body>
+</html>
