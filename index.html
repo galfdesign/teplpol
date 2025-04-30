@@ -7,109 +7,189 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 10px;
-            line-height: 1.5;
-            background-color: #f5f5f5;
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
         }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 10px;
+            line-height: 1.6;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
         .container {
             max-width: 100%;
             margin: 0 auto;
             padding: 15px;
             background: white;
-            box-shadow: 0 0 5px rgba(0,0,0,0.1);
-            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            border-radius: 10px;
         }
+        
         .brand {
             text-align: center;
             font-size: 1.8rem;
-            font-weight: bold;
-            color: #2c3e50;
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 5px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light-color);
+        }
+        
+        h1, h2 {
+            color: var(--dark-color);
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.4rem;
+        }
+        
+        .control-panel {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
         }
-        h1, h2 {
-            color: #2c3e50;
-            text-align: center;
-            margin: 10px 0;
-            font-size: 1.5rem;
+        
+        .control-group label {
+            font-weight: 600;
+            color: var(--dark-color);
+            min-width: 120px;
+            text-align: right;
         }
+        
+        input[type="number"] {
+            width: 80px;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+        
+        button {
+            padding: 8px 16px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        button:hover {
+            background: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+        }
+        
         table {
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
             font-size: 0.9rem;
         }
+        
         th, td {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: center;
         }
+        
         th {
-            background-color: #3498db;
+            background-color: var(--primary-color);
             color: white;
             font-size: 0.8rem;
         }
-        input {
-            width: 60px;
-            padding: 6px;
-            margin: 3px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 0.9rem;
-        }
+        
         .loop-name-input {
             width: 120px;
             text-align: left;
             padding-left: 8px;
         }
-        button {
-            padding: 6px 10px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 2px;
-            font-weight: bold;
-            font-size: 0.9rem;
-        }
-        button:hover {
-            background: #2980b9;
-        }
+        
         .export-btn {
-            background: #27ae60;
+            background: var(--success-color);
             margin-top: 10px;
         }
-        .export-btn:hover {
-            background: #219955;
-        }
+        
         .small-btn {
             padding: 4px 6px;
             font-size: 0.8rem;
         }
+        
         .warning {
-            color: #e74c3c;
+            color: var(--danger-color);
             font-weight: bold;
         }
+        
         .ok {
-            color: #27ae60;
+            color: var(--success-color);
         }
+        
         .high-resistance {
-            color: #f39c12;
+            color: var(--warning-color);
             font-weight: bold;
         }
+        
         .low-resistance {
             color: #2ecc71;
             font-weight: bold;
         }
+        
         .loop-inputs {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 15px;
             margin: 15px 0;
         }
+        
         .loop-card {
             border: 1px solid #ddd;
             padding: 15px;
@@ -120,6 +200,7 @@
             gap: 10px;
             align-items: center;
         }
+        
         .loop-header {
             grid-column: 1 / -1;
             display: flex;
@@ -127,47 +208,56 @@
             align-items: center;
             margin-bottom: 5px;
         }
+        
         .loop-title {
             font-weight: bold;
             font-size: 1rem;
         }
+        
         .control-group {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
+        
         .control-label {
             margin-bottom: 5px;
             font-size: 0.9rem;
         }
+        
         .length-controls {
             display: flex;
             align-items: center;
         }
+        
         .diameter-switch {
             display: flex;
             justify-content: center;
             gap: 5px;
         }
+        
         .diameter-btn {
             padding: 4px 8px;
-            background: #ecf0f1;
+            background: var(--light-color);
             border: 1px solid #bdc3c7;
             border-radius: 4px;
             cursor: pointer;
             font-size: 0.8rem;
         }
+        
         .diameter-btn.active {
-            background: #3498db;
+            background: var(--primary-color);
             color: white;
-            border-color: #2980b9;
+            border-color: var(--secondary-color);
         }
+        
         .chart-container {
             margin-top: 20px;
             position: relative;
             height: 300px;
             width: 100%;
         }
+        
         .summary {
             background-color: #eaf2f8;
             padding: 10px;
@@ -175,24 +265,76 @@
             margin-top: 15px;
             font-size: 0.9rem;
         }
+        
         .export-container {
             text-align: center;
             margin-top: 20px;
         }
-        @media (max-width: 600px) {
+        
+        @media (max-width: 768px) {
+            .control-group label {
+                min-width: 100%;
+                text-align: center;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn-group button {
+                width: 100%;
+            }
+            
             .loop-card {
                 grid-template-columns: 1fr;
+                padding: 12px;
             }
-            .control-group {
-                margin-bottom: 10px;
-            }
+            
             .loop-header {
                 flex-direction: column;
                 align-items: flex-start;
             }
+            
             .loop-name-input {
                 width: 100%;
-                margin-bottom: 5px;
+                margin-bottom: 8px;
+            }
+            
+            .length-controls {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            table {
+                font-size: 0.8rem;
+            }
+            
+            th, td {
+                padding: 6px 4px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .brand {
+                font-size: 1.5rem;
+            }
+            
+            h1, h2 {
+                font-size: 1.2rem;
+            }
+            
+            .control-panel {
+                padding: 12px;
+            }
+            
+            input[type="number"] {
+                width: 70px;
+                padding: 6px 8px;
             }
         }
     </style>
@@ -202,18 +344,22 @@
         <div class="brand">Galf Design</div>
         <h1>Калькулятор теплого пола</h1>
         
-        <div class="controls">
-            <div style="text-align: center;">
-                <label>Количество контуров: </label>
+        <div class="control-panel">
+            <div class="control-group">
+                <label>Количество контуров:</label>
                 <input type="number" id="loopCount" min="1" max="20" value="3">
-                <button onclick="generateInputs()">Создать</button>
+                <div class="btn-group">
+                    <button onclick="generateInputs()">Создать</button>
+                </div>
             </div>
 
-            <div style="text-align: center; margin-top: 10px;">
-                <label>Δt (°C): </label>
+            <div class="control-group">
+                <label>Δt (°C):</label>
                 <input type="number" id="deltaT" min="1" max="15" value="5">
-                <button onclick="calculate()">Рассчитать</button>
-                <button onclick="resetCalculator()" style="background: #95a5a6;">Сбросить</button>
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="calculate()">Рассчитать</button>
+                    <button class="btn-secondary" onclick="resetCalculator()">Сбросить</button>
+                </div>
             </div>
         </div>
 
@@ -262,7 +408,6 @@
     </div>
 
     <script>
-        // Используем jsPDF через window.jspdf
         const { jsPDF } = window.jspdf;
         let flowMeterChart = null;
         let loopData = [];
@@ -304,7 +449,6 @@
         function setDiameter(loopId, diameter) {
             document.getElementById(`diameter${loopId}`).value = diameter;
             
-            // Update active state for buttons
             const buttons = document.querySelectorAll(`#inputs .loop-card:nth-child(${loopId}) .diameter-btn`);
             buttons.forEach(btn => {
                 if (parseInt(btn.textContent) === diameter) {
@@ -324,30 +468,29 @@
         }
 
         function calculateFlowRate(power, deltaT) {
-            // Q = (P × 0.86) / ΔT [л/час]
             const flowRateLh = (power * 0.86) / deltaT;
-            return flowRateLh / 60; // Переводим в л/мин
+            return flowRateLh / 60;
         }
 
         function calculateHydraulicResistance(length, diameter, flowRate) {
-            const density = 997; // Плотность воды при 40°C (кг/м³)
-            const viscosity = 0.658e-6; // Кинематическая вязкость при 40°C (м²/с)
+            const density = 997;
+            const viscosity = 0.658e-6;
             
-            const flowRateM3 = flowRate / 1000 / 60; // м³/с
-            const area = Math.PI * Math.pow(diameter / 1000 / 2, 2); // м²
-            const velocity = flowRateM3 / area; // м/с
+            const flowRateM3 = flowRate / 1000 / 60;
+            const area = Math.PI * Math.pow(diameter / 1000 / 2, 2);
+            const velocity = flowRateM3 / area;
             
             const Re = (velocity * (diameter/1000)) / viscosity;
             
             let lambda;
             if (Re < 2300) {
-                lambda = 64 / Re; // Ламинарный режим
+                lambda = 64 / Re;
             } else {
-                lambda = 0.3164 / Math.pow(Re, 0.25); // Турбулентный режим (Шифринсон)
+                lambda = 0.3164 / Math.pow(Re, 0.25);
             }
             
             const deltaP = lambda * (length / (diameter/1000)) * (density * Math.pow(velocity, 2)) / 2;
-            return deltaP / 1000; // кПа
+            return deltaP / 1000;
         }
 
         function calculate() {
@@ -367,7 +510,6 @@
                 const diameter = parseFloat(document.getElementById(`diameter${i}`).value);
                 const loopName = document.getElementById(`loopName${i}`).value || `Контур ${i}`;
 
-                // Расчет по 60 Вт/8м (но не отображаем это в интерфейсе)
                 const power = (length / 8) * 60;
                 const flowRate = calculateFlowRate(power, deltaT);
                 const pipeArea = Math.PI * Math.pow(diameter / 1000 / 2, 2);
@@ -429,7 +571,6 @@
                 if (resistance > maxResistance) maxResistance = resistance;
             }
 
-            // Обновление сводки
             document.getElementById("totalFlow").textContent = totalFlow.toFixed(2);
             document.getElementById("totalFlowLh").textContent = (totalFlow * 60).toFixed(0);
             document.getElementById("maxVelocity").textContent = maxVelocity.toFixed(3);
@@ -555,28 +696,22 @@
             });
         }
 
-        async function exportToPDF() {
-            // Создаем новый PDF документ
+        function exportToPDF() {
             const doc = new jsPDF('p', 'mm', 'a4');
             
-            // Добавляем заголовок
             doc.setFontSize(20);
             doc.text('Galf Design - Расчет теплого пола', 105, 15, { align: 'center' });
             
-            // Добавляем дату
             const now = new Date();
             doc.setFontSize(10);
             doc.text(`Отчет создан: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`, 105, 22, { align: 'center' });
             
-            // Добавляем параметры расчета
             doc.setFontSize(12);
             doc.text(`Δt: ${document.getElementById("deltaT").value} °C`, 14, 30);
             
-            // Добавляем таблицу с результатами
             doc.setFontSize(12);
             doc.text('Результаты расчета:', 14, 40);
             
-            // Подготавливаем данные для таблицы
             const headers = [
                 "Контур",
                 "Название",
@@ -600,10 +735,9 @@
                 item.velocity.toFixed(3),
                 item.resistance.toFixed(2),
                 item.flowMeterSetting + '%',
-                item.status.replace(/[❌⚠️↓✅]/g, '') // Удаляем emoji для PDF
+                item.status.replace(/[❌⚠️↓✅]/g, '')
             ]);
             
-            // Генерируем таблицу
             doc.autoTable({
                 startY: 45,
                 head: [headers],
@@ -613,7 +747,6 @@
                 headStyles: { fillColor: [52, 152, 219] }
             });
             
-            // Добавляем сводку
             const summaryY = doc.lastAutoTable.finalY + 10;
             doc.setFontSize(12);
             doc.text('Сводка по системе:', 14, summaryY);
@@ -625,7 +758,6 @@
             doc.text(`Рабочая точка насоса: ${document.getElementById("pumpOperatingPoint").textContent}`, 14, summaryY + 28);
             doc.text(`Состояние системы: ${document.getElementById("systemStatus").textContent.replace(/[❌⚠️↓✅]/g, '')}`, 14, summaryY + 35);
             
-            // Сохраняем PDF
             doc.save(`Расчет_теплого_пола_${now.toISOString().slice(0,10)}.pdf`);
         }
 
