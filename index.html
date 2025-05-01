@@ -440,6 +440,7 @@
         const { jsPDF } = window.jspdf;
         let flowMeterChart = null;
         let loopData = [];
+        let chartImageData = null;
 
         function generateInputs() {
             const loopCount = parseInt(document.getElementById("loopCount").value);
@@ -658,6 +659,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        onComplete: function() {
+                            chartImageData = this.toBase64Image();
+                        }
+                    },
                     scales: {
                         'y-percent': {
                             type: 'linear',
@@ -725,8 +731,21 @@
             });
         }
 
-        function exportToPDF() {
+        function cleanStatusText(text) {
+            return text.replace(/[❌⚠️↓✅]/g, '').trim();
+        }
+
+        async function exportToPDF() {
             try {
+                // Показываем загрузку
+                const exportBtn = document.querySelector('.export-btn');
+                const originalText = exportBtn.textContent;
+                exportBtn.textContent = 'Генерация PDF...';
+                exportBtn.disabled = true;
+                
+                // Ждем завершения анимации графика
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
                 // Создаем новый PDF документ
                 const doc = new jsPDF({
                     orientation: 'portrait',
@@ -737,25 +756,32 @@
                 // Устанавливаем шрифт с поддержкой кириллицы
                 doc.setFont('helvetica');
                 
-                // Заголовок
+                // Заголовок документа
                 doc.setFontSize(20);
                 doc.setTextColor(30, 128, 210);
-                doc.text('Galf Design - Расчет теплого пола', 105, 20, { align: 'center' });
+                doc.text('Расчет теплого пола', 105, 20, { align: 'center' });
                 
                 // Дата и время
                 const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                
                 doc.setFontSize(10);
                 doc.setTextColor(100, 100, 100);
-                doc.text(`Отчет создан: ${now.toLocaleDateString('ru-RU')} ${now.toLocaleTimeString('ru-RU')}`, 105, 27, { align: 'center' });
+                doc.text(`Отчет создан: ${day}.${month}.${year} ${hours}:${minutes}`, 105, 27, { align: 'center' });
                 
                 // Параметры расчета
                 doc.setFontSize(12);
                 doc.setTextColor(40, 40, 40);
                 doc.text(`Δt: ${document.getElementById("deltaT").value} °C`, 20, 40);
                 
-                // Подготовка данных для таблицы
+                // Таблица результатов
                 const headers = [
-                    ["Контур", "Название", "Длина (м)", "Диаметр (мм)", "Мощность (Вт)", "Расход (л/мин)", "Скорость (м/с)", "Сопр. (кПа)", "Расходомер (%)", "Статус"]
+                    ["№", "Контур", "Длина (м)", "Диаметр (мм)", "Мощность (Вт)", 
+                     "Расход (л/мин)", "Скорость (м/с)", "Сопр. (кPa)", "Расходомер (%)"]
                 ];
                 
                 const data = loopData.map(item => [
@@ -763,12 +789,11 @@
                     item.name,
                     item.length,
                     item.diameter,
-                    item.power.toFixed(0),
+                    Math.round(item.power),
                     item.flowRate.toFixed(2),
                     item.velocity.toFixed(3),
                     item.resistance.toFixed(2),
-                    item.flowMeterSetting,
-                    item.status.replace(/[❌⚠️↓✅]/g, '')
+                    item.flowMeterSetting
                 ]);
 
                 // Добавляем таблицу
@@ -777,22 +802,23 @@
                     head: headers,
                     body: data,
                     margin: { left: 10, right: 10 },
-                    styles: { 
-                        fontSize: 8,
-                        cellPadding: 3,
-                        overflow: 'linebreak',
-                        textColor: [40, 40, 40],
-                        font: 'helvetica'
-                    },
                     headStyles: { 
                         fillColor: [30, 128, 210],
                         textColor: [255, 255, 255],
-                        fontStyle: 'bold',
-                        font: 'helvetica'
+                        fontStyle: 'bold'
                     },
-                    alternateRowStyles: {
-                        fillColor: [240, 240, 240],
-                        font: 'helvetica'
+                    styles: { 
+                        fontSize: 8,
+                        cellPadding: 3,
+                        overflow: 'linebreak'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 10 },
+                        1: { cellWidth: 25 },
+                        5: { cellWidth: 20 },
+                        6: { cellWidth: 20 },
+                        7: { cellWidth: 20 },
+                        8: { cellWidth: 20 }
                     },
                     didDrawPage: function(data) {
                         // Номер страницы
@@ -806,43 +832,60 @@
                     }
                 });
 
-                // Добавляем сводку
-                let summaryY = doc.lastAutoTable.finalY + 15;
-                if (summaryY > 250) {
-                    doc.addPage();
-                    summaryY = 20;
-                }
+                // Добавляем график на новую страницу
+                doc.addPage();
+                doc.setFontSize(16);
+                doc.setTextColor(30, 128, 210);
+                doc.text('Настройка расходомеров', 105, 20, { align: 'center' });
+                
+                // Получаем изображение графика
+                const canvas = document.getElementById('flowMeterChart');
+                const chartImage = canvas.toDataURL('image/png');
+                
+                // Размеры изображения графика
+                const imgWidth = 180;
+                const imgHeight = 100;
+                doc.addImage(chartImage, 'PNG', 15, 30, imgWidth, imgHeight);
+                
+                // Добавляем сводку на третью страницу
+                doc.addPage();
+                doc.setFontSize(16);
+                doc.setTextColor(30, 128, 210);
+                doc.text('Сводка по системе', 105, 20, { align: 'center' });
                 
                 doc.setFontSize(12);
-                doc.setTextColor(30, 128, 210);
-                doc.text('Сводка по системе', 105, summaryY, { align: 'center' });
-                
-                doc.setFontSize(10);
                 doc.setTextColor(40, 40, 40);
                 
-                // Текст сводки
-                doc.text(`• Общий расход: ${document.getElementById("totalFlow").textContent} л/мин (${document.getElementById("totalFlowLh").textContent} л/ч)`, 20, summaryY + 10);
-                doc.text(`• Максимальная скорость: ${document.getElementById("maxVelocity").textContent} м/с`, 20, summaryY + 16);
-                doc.text(`• Максимальное сопротивление: ${document.getElementById("maxResistance").textContent} кПа (${document.getElementById("maxResistanceMeters").textContent} м.вод.ст.)`, 20, summaryY + 22);
-                doc.text(`• Рабочая точка насоса: ${document.getElementById("pumpOperatingPoint").textContent}`, 20, summaryY + 28);
+                const summaryData = [
+                    [`Общий расход: ${document.getElementById("totalFlow").textContent} л/мин (${document.getElementById("totalFlowLh").textContent} л/ч)`],
+                    [`Макс. скорость: ${document.getElementById("maxVelocity").textContent} м/с`],
+                    [`Макс. сопротивление: ${document.getElementById("maxResistance").textContent} кПа (${document.getElementById("maxResistanceMeters").textContent} м.вод.ст.)`],
+                    [`Рабочая точка насоса: ${document.getElementById("pumpOperatingPoint").textContent}`],
+                    [`Состояние системы: ${cleanStatusText(document.getElementById("systemStatus").textContent)}`]
+                ];
                 
-                // Статус системы с цветом
-                const status = document.getElementById("systemStatus").textContent;
-                if (status.includes('❌')) {
-                    doc.setTextColor(231, 76, 60);
-                } else if (status.includes('⚠️')) {
-                    doc.setTextColor(243, 156, 18);
-                } else {
-                    doc.setTextColor(39, 174, 96);
-                }
-                doc.text(`• Состояние системы: ${status.replace(/[❌⚠️↓✅]/g, '')}`, 20, summaryY + 34);
-                
+                doc.autoTable({
+                    startY: 40,
+                    body: summaryData,
+                    styles: { 
+                        fontSize: 12,
+                        cellPadding: 6
+                    },
+                    theme: 'grid'
+                });
+
                 // Сохраняем PDF
-                doc.save(`Расчет_теплого_пола_${now.toISOString().slice(0,10)}.pdf`);
+                const fileName = `warm_floor_calc_${year}${month}${day}_${hours}${minutes}.pdf`;
+                doc.save(fileName);
                 
             } catch (error) {
                 console.error("Ошибка при создании PDF:", error);
                 alert("Произошла ошибка при создании PDF. Пожалуйста, попробуйте снова.");
+            } finally {
+                // Восстанавливаем кнопку
+                const exportBtn = document.querySelector('.export-btn');
+                exportBtn.textContent = 'Экспорт в PDF';
+                exportBtn.disabled = false;
             }
         }
 
